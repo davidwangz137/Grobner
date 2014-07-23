@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Classes", "Grobner\Grobner.vcxproj", "{8FB60664-1916-4FAB-A198-0BAD19BD1090}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GrobnerArray", "GrobnerArray\GrobnerArray.vcxproj", "{F49D5F9D-2FD6-4372-9896-E172FBF16120}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FunctionPointers", "FunctionPointers\FunctionPointers.vcxproj", "{1FC21357-52BA-4815-BB41-38C3DEBBC602}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8FB60664-1916-4FAB-A198-0BAD19BD1090}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8FB60664-1916-4FAB-A198-0BAD19BD1090}.Debug|Win32.Build.0 = Debug|Win32
+		{8FB60664-1916-4FAB-A198-0BAD19BD1090}.Release|Win32.ActiveCfg = Release|Win32
+		{8FB60664-1916-4FAB-A198-0BAD19BD1090}.Release|Win32.Build.0 = Release|Win32
+		{F49D5F9D-2FD6-4372-9896-E172FBF16120}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F49D5F9D-2FD6-4372-9896-E172FBF16120}.Debug|Win32.Build.0 = Debug|Win32
+		{F49D5F9D-2FD6-4372-9896-E172FBF16120}.Release|Win32.ActiveCfg = Release|Win32
+		{F49D5F9D-2FD6-4372-9896-E172FBF16120}.Release|Win32.Build.0 = Release|Win32
+		{1FC21357-52BA-4815-BB41-38C3DEBBC602}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1FC21357-52BA-4815-BB41-38C3DEBBC602}.Debug|Win32.Build.0 = Debug|Win32
+		{1FC21357-52BA-4815-BB41-38C3DEBBC602}.Release|Win32.ActiveCfg = Release|Win32
+		{1FC21357-52BA-4815-BB41-38C3DEBBC602}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
