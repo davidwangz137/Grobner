@@ -19,15 +19,15 @@ public:
 class Monomial {
 public:
 	Rational coeff;
-	int * powers;
-	Monomial::Monomial(Rational a, int* b);
+	vector<int> powers;
+	Monomial::Monomial(Rational a, vector<int> b);
 	string print(int f);
 	string printP();
 };
 
 class Polynomial {
-	vector<Monomial> poly;
 public:
+	vector<Monomial> poly;
 	Polynomial(vector<Monomial> v);
 	void sort(string order);
 	string print();

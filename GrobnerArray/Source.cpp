@@ -111,11 +111,46 @@ Rational operator/ (const Rational& a, const Rational& b)
 	return Rational(newNumer, newDenom, true);//Boolean is extra flag to prevent reduction by GCD again
 }
 
-Monomial::Monomial(Rational a, int* b){
+Monomial::Monomial(Rational a, vector<int> b){
 	coeff = a;
-	powers = new int[size];
 	for (int i = 0; i < size; i++)
-		powers[i] = b[i];
+		powers.push_back(b[i]);
+}
+
+Monomial operator+ (Monomial a, Monomial b)
+{
+	Rational rat = a.coeff + b.coeff;
+	Monomial c(rat, a.powers);
+	return c;//Return the new monomial
+}
+
+Monomial operator- (Monomial a, Monomial b)
+{
+	Rational rat = a.coeff - b.coeff;
+	Monomial c(rat, a.powers);
+	return c;//Return the new monomial
+}
+
+Monomial operator* (Monomial a, Monomial b)
+{
+	Rational rat = a.coeff*b.coeff;
+	Monomial c(rat, a.powers);
+	for (int i = 0; i < size; i++)
+	{
+		c.powers[i] += b.powers[i];
+	}
+	return c;//Return the new monomial
+}
+
+Monomial operator/ (Monomial a, Monomial b)
+{
+	Rational rat = a.coeff/b.coeff;
+	Monomial c(rat, a.powers);
+	for (int i = 0; i < size; i++)
+	{
+		c.powers[i] -= b.powers[i];
+	}
+	return c;//Return the new monomial
 }
 
 string Monomial::print(int f){
@@ -144,6 +179,72 @@ Polynomial::Polynomial(vector<Monomial> v)
 	selection(poly, lex);
 }
 
+Polynomial operator* (Monomial a, Polynomial b)
+{
+	for (int i = 0; i < b.poly.size(); i++)
+	{
+		b.poly[i] = b.poly[i]*a;//Multiply by the monomial
+	}
+	return b;//Return the new polynomial
+}
+
+Polynomial add (Polynomial a, Polynomial b, int(*compar)(const Monomial, const Monomial))
+{
+	vector<Monomial> vec;//Holds the polynomial list
+	int num1 = a.poly.size();
+	int num2 = b.poly.size();
+	int inc1 = 0;
+	int inc2 = 0;
+	while (true)
+	{
+		if (inc1 == num1 && inc2 == num2)//If all the polynomials are emptied out then break
+			break;
+		if (inc1 == num1)//Check if at limit first
+		{
+			vec.push_back(b.poly[inc2]);
+			inc2++;
+		}
+		else
+		{
+			if (inc2 == num2)//Check if at limit first
+			{
+				vec.push_back(a.poly[inc1]);
+				inc1++;
+			}
+			else
+			{
+				switch (compar(a.poly[inc1], b.poly[inc2]))
+				{
+				case 0:
+					vec.push_back(a.poly[inc1] + b.poly[inc2]);
+					inc1++, inc2++;
+					break;
+				case 1:
+					vec.push_back(a.poly[inc1]);
+					inc1++;
+					break;
+				case -1:
+					vec.push_back(b.poly[inc2]);
+					inc2++;
+					break;
+				}
+			}
+		}
+	}
+	return Polynomial(vec);
+}
+
+Polynomial mul(Polynomial a, Polynomial b, int(*compar)(const Monomial, const Monomial))
+{
+	vector<Monomial> vec;
+	Polynomial ret(vec);
+	for (int i = 0; i < a.poly.size(); i++)
+	{
+		ret = add(ret, a.poly[i] * b, compar);//Append the new terms from multiplication
+	}
+	return ret;
+}
+
 void Polynomial::sort(string order)
 {
 	if (order == "lex")//Sort monomials according to lexographical order
@@ -157,6 +258,8 @@ void Polynomial::sort(string order)
 string Polynomial::print()
 {
 	string app = "";
+	if (poly.size() == 0)//If empty polynomial
+		return "";
 	app += poly[0].print(0);
 	for (int i = 1; i < poly.size(); i++)
 	{
@@ -303,27 +406,24 @@ int main(){
 
 	Rational w(-12, 3), x(-26, -5), y(13, -4), z = x / w;
 
-	int arr_1[] = { 1, 2, 1, 5, 0 };
-	int* arr1 = arr_1;
-	int arr_2[] = { 1, 2, 1, 5, 1 };
-	int* arr2 = arr_2;
-	int arr_3[] = { 0, 3, 5, 1, 4 };
-	int* arr3 = arr_3;
-	int arr_4[] = { 2, 0, 2, 0, 0 };
-	int* arr4 = arr_4;
+	vector<int> arr1 = { 1, 2, 1, 5, 1 };
+	vector<int> arr2 = { 1, 2, 1, 5, 0 };
+	vector<int> arr3 = { 0, 3, 5, 1, 4 };
+	vector<int> arr4 = { 2, 0, 2, 0, 0 };
 	Monomial a(w, arr1);
 	Monomial b(x, arr2);
 	Monomial c(y, arr3);
 	Monomial d(z, arr4);
 
-	vector<Monomial> v;
-	v.push_back(a);
-	v.push_back(b);
-	v.push_back(c);
-	v.push_back(d);
-	Polynomial pol(v);
-	cout << pol.print() << endl;
-	pol.sort("grl");
-	cout << pol.print() << endl;
+	vector<Monomial> v1, v2;
+	v1.push_back(a);
+	v1.push_back(b);
+	v2.push_back(c);
+	v2.push_back(d);
+	Polynomial pol1(v1), pol2(v2);
+	std::cout << pol1.print() << endl;
+	cout << pol2.print() << endl;
+	Polynomial pol3 = mul(pol1,pol2,lex);
+	cout << pol3.print() << endl;
 	cin.ignore();
 }
