@@ -33,3 +33,13 @@ public:
 	string print();
 };
 
+class Ideal {
+public:
+	vector<Polynomial> gen;
+	string ord;
+	Ideal(vector<Polynomial> p, string order);
+	void changeOrder(string order);
+	vector<Polynomial> div(Polynomial p);
+	vector<Polynomial> divide(Polynomial p, int(*compar)(const Monomial, const Monomial));
+	void print();
+};

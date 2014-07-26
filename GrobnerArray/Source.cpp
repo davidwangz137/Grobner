@@ -13,10 +13,11 @@ int lex(const Monomial a, const Monomial b);
 int grl(const Monomial a, const Monomial b);
 int grv(const Monomial a, const Monomial b);
 void selection(vector<Monomial> &poly, int(*compar)(const Monomial, const Monomial));
-void vPrint(vector<Monomial> poly);
+void mPrint(vector<Monomial> poly);
+void pPrint(vector<Polynomial> vec);
 
 string Rational::print(int f){
-	if (f == 1)
+	if (f == 1)//Pretty print so that it looks good
 	{
 		if (denom == 1)
 			return to_string(-numer);
@@ -117,6 +118,17 @@ Monomial::Monomial(Rational a, vector<int> b){
 		powers.push_back(b[i]);
 }
 
+//Tests if Monomial a can be divided by b
+bool divis (Monomial a, Monomial b)
+{
+	for (int i = 0; i < size; i++)
+	{
+		if (a.powers[i] < b.powers[i])
+			return false;
+	}
+	return true;
+}
+
 Monomial operator+ (Monomial a, Monomial b)
 {
 	Rational rat = a.coeff + b.coeff;
@@ -188,8 +200,57 @@ Polynomial operator* (Monomial a, Polynomial b)
 	return b;//Return the new polynomial
 }
 
+Polynomial add(Polynomial a, Monomial b, int(*compar)(const Monomial, const Monomial))
+{
+	Rational c;//Used for checking zeroes
+	vector<Monomial> vec;//Holds the polynomial list
+	int num = a.poly.size();
+	int inc = 0;
+	bool added = false;//Checks if b was added
+	while (true)
+	{
+		if (inc == num && added)
+			break;
+		if (inc == num)//Check if all of "a" added
+		{
+			vec.push_back(b);
+			added = true;
+		}
+		else
+		{
+			if (added)//Check if b already added
+			{
+				vec.push_back(a.poly[inc]);
+				inc++;
+			}
+			else
+			{
+				switch (compar(a.poly[inc], b))
+				{
+				case 0:
+					c = a.poly[inc].coeff + b.coeff;
+					if (c.numer != 0)
+						vec.push_back(a.poly[inc] + b);
+					inc++, added = true;
+					break;
+				case 1:
+					vec.push_back(a.poly[inc]);
+					inc++;
+					break;
+				case -1:
+					vec.push_back(b);
+					added = true;
+					break;
+				}
+			}
+		}
+	}
+	return Polynomial(vec);
+}
+
 Polynomial add (Polynomial a, Polynomial b, int(*compar)(const Monomial, const Monomial))
 {
+	Rational c;//Used for checking zeroes
 	vector<Monomial> vec;//Holds the polynomial list
 	int num1 = a.poly.size();
 	int num2 = b.poly.size();
@@ -216,7 +277,9 @@ Polynomial add (Polynomial a, Polynomial b, int(*compar)(const Monomial, const M
 				switch (compar(a.poly[inc1], b.poly[inc2]))
 				{
 				case 0:
-					vec.push_back(a.poly[inc1] + b.poly[inc2]);
+					c = a.poly[inc1].coeff + b.poly[inc2].coeff;
+					if (c.numer != 0)
+						vec.push_back(a.poly[inc1] + b.poly[inc2]);
 					inc1++, inc2++;
 					break;
 				case 1:
@@ -259,7 +322,7 @@ string Polynomial::print()
 {
 	string app = "";
 	if (poly.size() == 0)//If empty polynomial
-		return "";
+		return "0";//All ideals that are not generated have 0 in them anyways
 	app += poly[0].print(0);
 	for (int i = 1; i < poly.size(); i++)
 	{
@@ -273,6 +336,115 @@ string Polynomial::print()
 			app += poly[i].print(0);
 	}
 	return app;
+}
+
+Ideal::Ideal(vector<Polynomial> p, string order)
+{
+	gen = p;
+	ord = order;
+}
+
+void Ideal::changeOrder(string order)
+{
+	ord = order;
+}
+
+void Ideal::print()
+{
+	cout << "The ideal contains " << gen.size() << " polynomial generators" << endl;
+	for (int i = 0; i < gen.size(); i++)
+	{
+		cout << gen[i].print() << endl;
+	}
+}
+
+vector<Polynomial> Ideal::div(Polynomial p)
+{
+	if (ord == "lex")//Sort monomials according to lexographical order
+		return divide(p, lex);
+	if (ord == "grl")//Graded lex
+		return divide(p, grl);
+	else//Graded reverse lex order
+		return divide(p, grv);
+}
+
+vector<Polynomial> Ideal::divide(Polynomial p, int(*compar)(const Monomial, const Monomial))
+{
+	vector<Polynomial> vec;//Holds the polynomials from the division
+	int leng = gen.size();
+	for (int i = 0; i < leng + 1; i++)//An extra one for the remainder
+	{
+		vector<Monomial> a;
+		vec.push_back(Polynomial(a));
+	}
+	cout << endl;
+	while (p.poly.size() > 0)
+	{
+		//pPrint(vec);
+		cout << p.print() << endl;
+		bool divided = false;//Checks if a division occured
+		for (int i = 0; i < leng && divided == false; i++)
+		{
+			//cout << "here" << i;
+			if (divis(p.poly[0], gen[i].poly[0]))
+			{
+				Monomial div = p.poly[0] / gen[i].poly[0];
+				//cout << div.print(0);
+				vec[i] = add(vec[i], div, compar);
+				div.coeff.numer *= -1;//Now make it minus
+				Polynomial minus = div*gen[i];
+				//cout << endl << p.print() << endl;
+				//cout << minus.print() << endl;
+				p = add(p, minus, compar);
+				//cout << p.print() << endl;
+				divided = true;
+			}
+		}
+		//cout << "HERE";
+		if (divided == false)//The leading term could not be divided
+		{
+			vec[leng] = add(vec[leng],p.poly[0],compar);
+			p.poly.erase(p.poly.begin());
+		}
+	}
+	//Print the results
+	for (int i = 0; i < leng; i++)
+	{
+		cout << "f" << i << ": " << vec[i].print() << " * (" << gen[i].print() << ")" << endl;
+	}
+	cout << "Remainder: " << vec[leng].print() << endl;
+	cout << endl << "Returning..." << endl;
+	return vec;
+}
+
+int main(){
+	size = 5;//The number of variables in the field that is worked in. Global variable
+
+	Rational n1(-12, 3), n2(-26, -5), n3(13, -4), n4(3,5), n5(4,7), n6(9,2);
+
+	vector<int> arr1 = { 1, 0, 0, 0, 0 };
+	vector<int> arr2 = { 0, 1, 0, 0, 0 };
+	vector<int> arr3 = { 0, 0, 1, 0, 0 };
+	vector<int> arr4 = { 0, 0, 0, 1, 0 };
+	vector<int> arr5 = { 1, 2, 3, 4, 5 };
+	vector<int> arr6 = { 5, 4, 3, 2, 1 };
+	Monomial m1(n1, arr1), m2(n2, arr2), m3(n3, arr3), m4(n4, arr4), m5(n5, arr5), m6(n6, arr6);
+
+	vector<Monomial> v1, v2, v3;
+	v1.push_back(m1);
+	v1.push_back(m2);
+	v2.push_back(m3);
+	v2.push_back(m4);
+	v3.push_back(m5);
+	v3.push_back(m6);
+	vector<Polynomial> vec;
+	vec.push_back(Polynomial(v1));
+	vec.push_back(Polynomial(v2));
+	Ideal ide(vec, "lex");
+	ide.print();
+	Polynomial p(v3);
+	vector<Polynomial> res = ide.div(p);
+	std::cin.ignore();
 }
 
 //A selection sort to sort the monomials
@@ -308,7 +480,7 @@ int lex(const Monomial a, const Monomial b)
 			return -1;
 		}
 	}
-	return 0;//This never hits unless monomials equal degrees
+return 0;//This never hits unless monomials equal degrees
 }
 
 int grl(const Monomial a, const Monomial b)
@@ -338,7 +510,7 @@ int grv(const Monomial a, const Monomial b)
 		return 1;
 	if (sum2 > sum1)
 		return -1;
-	for (int i = size-1; i >= 0; i--)//Now do a graded reverse lexographical comparison
+	for (int i = size - 1; i >= 0; i--)//Now do a graded reverse lexographical comparison
 	{
 		if (a.powers[i] > b.powers[i])
 		{
@@ -352,7 +524,7 @@ int grv(const Monomial a, const Monomial b)
 	return 0;
 }
 
-void vPrint(vector<Monomial> poly){
+void mPrint(vector<Monomial> poly){
 	string app = "";
 	app += poly[0].print(0);
 	for (int i = 1; i < poly.size(); i++)
@@ -401,29 +573,10 @@ void signCheck(int& a, int&b)
 	}
 }
 
-int main(){
-	size = 5;//The number of variables in the field that is worked in. Global variable
-
-	Rational w(-12, 3), x(-26, -5), y(13, -4), z = x / w;
-
-	vector<int> arr1 = { 1, 2, 1, 5, 1 };
-	vector<int> arr2 = { 1, 2, 1, 5, 0 };
-	vector<int> arr3 = { 0, 3, 5, 1, 4 };
-	vector<int> arr4 = { 2, 0, 2, 0, 0 };
-	Monomial a(w, arr1);
-	Monomial b(x, arr2);
-	Monomial c(y, arr3);
-	Monomial d(z, arr4);
-
-	vector<Monomial> v1, v2;
-	v1.push_back(a);
-	v1.push_back(b);
-	v2.push_back(c);
-	v2.push_back(d);
-	Polynomial pol1(v1), pol2(v2);
-	std::cout << pol1.print() << endl;
-	cout << pol2.print() << endl;
-	Polynomial pol3 = mul(pol1,pol2,lex);
-	cout << pol3.print() << endl;
-	cin.ignore();
+void pPrint(vector<Polynomial> vec)
+{
+	for (int i = 0; i < vec.size(); i++)
+	{
+		cout << vec[i].print() << " ";
+	}
 }
